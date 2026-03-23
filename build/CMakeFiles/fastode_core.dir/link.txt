@@ -1,0 +1,2 @@
+C:\ProgramData\mingw64\mingw64\bin\ar.exe qc libfastode_core.a CMakeFiles/fastode_core.dir/src/rk4.cpp.obj
+C:\ProgramData\mingw64\mingw64\bin\ranlib.exe libfastode_core.a

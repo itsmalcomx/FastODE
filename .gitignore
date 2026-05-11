@@ -1,0 +1,19 @@
+# Build output
+build/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+python/__pycache__/
+
+# VS Code
+.vscode/
+
+# Compiled Python extensions
+*.pyd
+*.so
+
+# CMake
+CMakeCache.txt
+CMakeFiles/

@@ -30,4 +30,23 @@ PYBIND11_MODULE(fastode, m)
              py::arg("t1"),
              py::arg("y0"),
              "Solve from t0 to t1 with initial condition y0");
+
+    py::class_<RK45Solver>(m, "RK45Solver")
+    .def(py::init<ODEFunc, double, double, double, double, double>(),
+         py::arg("f"),
+         py::arg("rtol")   = 1e-3,
+         py::arg("atol")   = 1e-6,
+         py::arg("h_init") = 0.1,
+         py::arg("h_max")  = 1.0,
+         py::arg("h_min")  = 1e-10,
+         "Create an RK45 adaptive solver.")
+    .def("solve", &RK45Solver::solve,
+         py::arg("t0"),
+         py::arg("t1"),
+         py::arg("y0"),
+         "Solve from t0 to t1 with initial condition y0")
+    .def("get_times",      &RK45Solver::get_times)
+    .def("get_n_steps",    &RK45Solver::get_n_steps)
+    .def("get_n_rejected", &RK45Solver::get_n_rejected);
 }
+

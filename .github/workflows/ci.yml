@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ libgtest-dev python3-dev python3-pip
+        pip3 install pybind11 numpy scipy pytest
+
+    - name: Build
+      run: |
+        mkdir -p build && cd build
+        cmake .. -Dpybind11_DIR=$(python3 -c "import pybind11; print(pybind11.get_cmake_dir())")
+        make
+
+    - name: Run C++ tests
+      run: |
+        cd build
+        ./test_rk4
+
+    - name: Run Python validation
+      run: |
+        cd build
+        python3 -c "
+import sys
+sys.path.insert(0, '.')
+sys.path.insert(0, '../python')
+from fastode_interface import solve
+import math
+def f(t, y):
+    return [-y[0]]
+result = solve(f, t0=0.0, t1=1.0, y0=[1.0], method='RK45')
+error = abs(result.y[0,-1] - math.exp(-1.0))
+print(f'Error: {error:.2e}')
+assert error < 1e-5, f'Error too large: {error}'
+print('Python validation passed!')
+"

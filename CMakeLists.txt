@@ -15,10 +15,16 @@ set(Python3_ROOT_DIR "C:/Program Files/Python314")
 find_package(pybind11 REQUIRED)
 
 # Core C++ library
+# add_library(fastode_core STATIC
+#     src/rk4.cpp
+# )
+# target_include_directories(fastode_core PUBLIC include)
 add_library(fastode_core STATIC
     src/rk4.cpp
 )
-target_include_directories(fastode_core PUBLIC include)
+set_target_properties(fastode_core PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
 
 # Python bindings
 pybind11_add_module(fastode

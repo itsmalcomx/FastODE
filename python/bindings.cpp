@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/functional.h>
 #include "rk4.hpp"
+#include <memory>
 
 namespace py = pybind11;
 
@@ -55,5 +56,18 @@ PYBIND11_MODULE(fastode, m)
     .def("get_times",      &RK45Solver::get_times)
     .def("get_n_steps",    &RK45Solver::get_n_steps)
     .def("get_n_rejected", &RK45Solver::get_n_rejected);
+
+    // Smart pointer factory function
+// unique_ptr ensures solver is automatically destroyed
+// when it goes out of scope — no manual memory management
+m.def("make_rk45_solver",
+    [](ODEFunc f, double rtol, double atol) {
+        return std::make_unique<RK45Solver>(f, rtol, atol);
+    },
+    py::arg("f"),
+    py::arg("rtol") = 1e-6,
+    py::arg("atol") = 1e-9,
+    "Create an RK45Solver using unique_ptr (automatic memory management)"
+);
 }
 

@@ -25,8 +25,18 @@ add_library(fastode_core STATIC
 target_include_directories(fastode_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
 )
+# set_target_properties(fastode_core PROPERTIES
+#     POSITION_INDEPENDENT_CODE ON
+# )
 set_target_properties(fastode_core PROPERTIES
     POSITION_INDEPENDENT_CODE ON
+)
+
+# Cache optimization: -O3 enables aggressive optimization
+# -march=native uses CPU-specific instructions (SIMD/AVX)
+# This allows the compiler to auto-vectorize inner loops
+target_compile_options(fastode_core PRIVATE
+    $<$<NOT:$<BOOL:${MSVC}>>:-O3 -march=native>
 )
 
 # Python bindings

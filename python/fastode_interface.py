@@ -14,7 +14,14 @@ if sys.platform == "win32":
 import numpy as np
 
 # Import the C++ bindings
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../build"))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../build"))
+# from fastode import RK4Solver, RK45Solver
+
+# Import the C++ bindings
+import os
+_here = os.path.dirname(os.path.abspath(__file__))
+_build = os.path.join(_here, "..", "build")
+sys.path.insert(0, os.path.abspath(_build))
 from fastode import RK4Solver, RK45Solver
 
 

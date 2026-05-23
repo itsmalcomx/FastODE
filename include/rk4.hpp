@@ -98,6 +98,16 @@ private:
     int     m_n_rejected;
     std::vector<double> m_times;
 
+    // ── Pre-allocated workspace vectors ──────────────────
+    // Allocated ONCE when solve() is first called
+    // Reused every step — avoids repeated heap allocation
+    // 'mutable' allows modification even in const methods
+    mutable std::vector<double> m_k1, m_k2, m_k3;
+    mutable std::vector<double> m_k4, m_k5, m_k6, m_k7;
+    mutable std::vector<double> m_y_new;
+    mutable std::vector<double> m_err;
+    mutable std::vector<double> m_tmp;
+
     // Single RK45 step using Dormand-Prince coefficients
     // Returns: {new_state, error_norm}
     // error_norm <= 1.0 means step is accurate enough

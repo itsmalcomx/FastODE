@@ -14,6 +14,87 @@ using ODEFunc = std::function<
 >;
 
 // ─────────────────────────────────────────────
+// Trajectory: flat contiguous 2D array
+//
+// BEFORE (jagged array — bad for cache):
+//   vector<vector<double>> — each row is a
+//   separate heap allocation at random address
+//
+// AFTER (flat array — cache friendly):
+//   Single contiguous block of memory
+//   Access: data[step * n_dims + dim]
+//   All steps stored next to each other in RAM
+// ─────────────────────────────────────────────
+class Trajectory
+{
+public:
+    Trajectory() : m_n_dims(0), m_n_steps(0) {}
+
+    // Initialize with known dimensions
+    Trajectory(size_t n_dims, size_t capacity)
+        : m_n_dims(n_dims)
+        , m_n_steps(0)
+    {
+        // Allocate one flat block for all steps
+        // capacity * n_dims doubles in one contiguous block
+        m_data.reserve(capacity * n_dims);
+    }
+
+    // Add a new step to the trajectory
+    // Copies state vector into the flat array
+    void push_back(const std::vector<double>& state)
+    {
+        for (double v : state)
+            m_data.push_back(v);
+        ++m_n_steps;
+    }
+
+    // Access element at [step][dim]
+    // step * n_dims + dim gives the flat index
+    double operator()(size_t step, size_t dim) const
+    {
+        return m_data[step * m_n_dims + dim];
+    }
+
+    // Get entire step as a vector (for compatibility)
+    std::vector<double> get_step(size_t step) const
+    {
+        std::vector<double> result(m_n_dims);
+        for (size_t d = 0; d < m_n_dims; ++d)
+            result[d] = m_data[step * m_n_dims + d];
+        return result;
+    }
+
+    // Raw pointer to data — for NumPy buffer protocol
+    const double* data() const { return m_data.data(); }
+    double*       data()       { return m_data.data(); }
+
+    size_t n_dims()  const { return m_n_dims; }
+    size_t n_steps() const { return m_n_steps; }
+    size_t size()    const { return m_data.size(); }
+
+    // Convert to vector<vector<double>> for compatibility
+    std::vector<std::vector<double>> to_nested() const
+    {
+        std::vector<std::vector<double>> result(m_n_steps);
+        for (size_t s = 0; s < m_n_steps; ++s)
+            result[s] = get_step(s);
+        return result;
+    }
+
+    // Get the last step — replaces vector::back()
+std::vector<double> back() const
+{
+    return get_step(m_n_steps - 1);
+}
+
+private:
+    std::vector<double> m_data;  // flat contiguous storage
+    size_t m_n_dims;             // number of ODE dimensions
+    size_t m_n_steps;            // number of time steps stored
+};
+
+// ─────────────────────────────────────────────
 // RK4Solver: Fixed step size solver
 // Uses the classical 4th order Runge-Kutta method
 // Good for problems where uniform step size is OK
@@ -35,11 +116,15 @@ public:
 
     // Solve from t0 to t1 with initial condition y0
     // Returns full trajectory: trajectory[i] = state at step i
-    std::vector<std::vector<double>> solve(
-        double t0,
-        double t1,
-        const std::vector<double>& y0
-    );
+    // std::vector<std::vector<double>> solve(
+    //     double t0,
+    //     double t1,
+    //     const std::vector<double>& y0
+    // );
+    Trajectory solve(
+    double t0, double t1,
+    const std::vector<double>& y0
+);
 
 private:
     ODEFunc m_f;  // the ODE function
@@ -72,11 +157,15 @@ public:
 
     // Solve from t0 to t1 with initial condition y0
     // Returns full trajectory with adaptive time steps
-    std::vector<std::vector<double>> solve(
-        double t0,
-        double t1,
-        const std::vector<double>& y0
-    );
+    // std::vector<std::vector<double>> solve(
+    //     double t0,
+    //     double t1,
+    //     const std::vector<double>& y0
+    // );
+    Trajectory solve(
+    double t0, double t1,
+    const std::vector<double>& y0
+);
 
     // Get the time points where solution was evaluated
     std::vector<double> get_times() const { return m_times; }

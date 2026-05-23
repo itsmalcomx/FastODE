@@ -86,21 +86,40 @@ def solve(f, t0, t1, y0,
         raise ValueError("y0 must not be empty")
     if method not in ("RK4", "RK45"):
         raise ValueError("method must be 'RK4' or 'RK45'")
-
+    
     if method == "RK4":
         solver     = RK4Solver(f, h)
-        trajectory = solver.solve(t0, t1, y0)
-        n_steps    = len(trajectory) - 1
+        traj       = solver.solve(t0, t1, y0)
+        trajectory = traj.to_nested()
+        n_steps    = traj.n_steps() - 1
         n_rejected = 0
-        # RK4 has uniform time points
-        import numpy as np
-        times = list(np.arange(t0, t1 + h, h)[:len(trajectory)])
+        times = list(np.arange(t0, t1 + h, h)[:traj.n_steps()])
 
-    else:  # RK45
+    else:
         solver     = RK45Solver(f, rtol, atol, h_init, h_max, h_min)
-        trajectory = solver.solve(t0, t1, y0)
+        traj       = solver.solve(t0, t1, y0)
+        trajectory = traj.to_nested()
         n_steps    = solver.get_n_steps()
         n_rejected = solver.get_n_rejected()
         times      = solver.get_times()
 
     return ODEResult(times, trajectory, n_steps, n_rejected, method)
+
+    # if method == "RK4":
+    #     solver     = RK4Solver(f, h)
+    #     trajectory = solver.solve(t0, t1, y0)
+    #     n_steps    = len(trajectory) - 1
+    #     n_rejected = 0
+    #     # RK4 has uniform time points
+    #     import numpy as np
+    #     times = list(np.arange(t0, t1 + h, h)[:len(trajectory)])
+
+    # else:  # RK45
+    #     solver     = RK45Solver(f, rtol, atol, h_init, h_max, h_min)
+    #     trajectory = solver.solve(t0, t1, y0)
+    #     n_steps    = solver.get_n_steps()
+    #     n_rejected = solver.get_n_rejected()
+    #     times      = solver.get_times()
+
+    # return ODEResult(times, trajectory, n_steps, n_rejected, method)
+    

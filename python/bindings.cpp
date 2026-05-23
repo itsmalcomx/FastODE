@@ -10,6 +10,13 @@ PYBIND11_MODULE(fastode, m)
 {
     m.doc() = "FastODE: A lightweight ODE solver in C++ with Python interface";
 
+    // Expose Trajectory class
+    py::class_<Trajectory>(m, "Trajectory")
+        .def("n_dims",   &Trajectory::n_dims)
+        .def("n_steps",  &Trajectory::n_steps)
+        .def("get_step", &Trajectory::get_step)
+        .def("to_nested",&Trajectory::to_nested);
+
 
     //using this to expose the RK4Solver class to Python, allowing users to create instances of RK4Solver and call its methods from Python code.
     py::class_<RK4Solver>(m, "RK4Solver")

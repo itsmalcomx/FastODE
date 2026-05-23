@@ -119,12 +119,37 @@ std::vector<double> RK4Solver::step(
 // ─────────────────────────────────────────────
 // Full RK4 solve
 // ─────────────────────────────────────────────
-std::vector<std::vector<double>> RK4Solver::solve(
+// std::vector<std::vector<double>> RK4Solver::solve(
+//     double t0,
+//     double t1,
+//     const std::vector<double>& y0)
+// {
+//     std::vector<std::vector<double>> trajectory;
+//     trajectory.push_back(y0);
+
+//     double t = t0;
+//     auto y = y0;
+
+//     while (t < t1 - 1e-10)
+//     {
+//         y = step(t, y);
+//         t += m_h;
+//         trajectory.push_back(y);
+//     }
+
+//     return trajectory;
+// }
+
+Trajectory RK4Solver::solve(
     double t0,
     double t1,
     const std::vector<double>& y0)
 {
-    std::vector<std::vector<double>> trajectory;
+    // Estimate number of steps for capacity
+    size_t capacity = static_cast<size_t>((t1 - t0) / m_h) + 2;
+
+    // Create flat trajectory — one contiguous memory block
+    Trajectory trajectory(y0.size(), capacity);
     trajectory.push_back(y0);
 
     double t = t0;
@@ -312,16 +337,70 @@ RK45Solver::step(double t,
 // ─────────────────────────────────────────────
 // Full RK45 solve with adaptive step size
 // ─────────────────────────────────────────────
-std::vector<std::vector<double>>
-RK45Solver::solve(double t0,
-                  double t1,
-                  const std::vector<double>& y0)
+// std::vector<std::vector<double>>
+// RK45Solver::solve(double t0,
+//                   double t1,
+//                   const std::vector<double>& y0)
+// {
+//     m_n_steps    = 0;
+//     m_n_rejected = 0;
+//     m_times.clear();
+
+//     std::vector<std::vector<double>> trajectory;
+//     trajectory.push_back(y0);
+//     m_times.push_back(t0);
+
+//     double t = t0;
+//     auto   y = y0;
+//     double h = std::min(m_h_init, t1 - t0);
+
+//     while (t < t1 - 1e-10)
+//     {
+//         if (t + h > t1) h = t1 - t;
+
+//         auto [y_new, err_norm] = step(t, y, h);
+
+//         if (err_norm <= 1.0)
+//         {
+//             t += h;
+//             y  = y_new;
+//             trajectory.push_back(y);
+//             m_times.push_back(t);
+//             m_n_steps++;
+
+//             double factor = 0.9 * std::pow(1.0/err_norm, 0.2);
+//             factor = std::min(factor, 10.0);
+//             h = std::min(h * factor, m_h_max);
+//         }
+//         else
+//         {
+//             m_n_rejected++;
+//             double factor = 0.9 * std::pow(1.0/err_norm, 0.2);
+//             factor = std::max(factor, 0.1);
+//             h = h * factor;
+
+//             if (h < m_h_min)
+//                 throw std::runtime_error(
+//                     "RK45: step size too small"
+//                 );
+//         }
+//     }
+
+//     return trajectory;
+// }
+
+Trajectory RK45Solver::solve(
+    double t0,
+    double t1,
+    const std::vector<double>& y0)
 {
     m_n_steps    = 0;
     m_n_rejected = 0;
     m_times.clear();
 
-    std::vector<std::vector<double>> trajectory;
+    // Estimate capacity — RK45 takes variable steps
+    // 100 is a reasonable initial estimate
+    Trajectory trajectory(y0.size(), 100);
     trajectory.push_back(y0);
     m_times.push_back(t0);
 

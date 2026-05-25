@@ -31,11 +31,18 @@ class ODEResult:
     Similar to scipy's OdeSolution object.
     """
     def __init__(self, t, y, n_steps, n_rejected, method):
-        self.t          = np.array(t)           # 1D array of time points
-        self.y          = np.array(y).T         # 2D array (n_dims x n_steps)
+        self.t          = np.array(t)
+        self.y          = np.array(y)  # already (n_dims, n_steps)
         self.n_steps    = n_steps
         self.n_rejected = n_rejected
         self.method     = method
+
+    # def __init__(self, t, y, n_steps, n_rejected, method):
+    #     self.t          = np.array(t)           # 1D array of time points
+    #     self.y          = np.array(y).T         # 2D array (n_dims x n_steps)
+    #     self.n_steps    = n_steps
+    #     self.n_rejected = n_rejected
+    #     self.method     = method
 
     def __repr__(self):
         return (
@@ -88,22 +95,44 @@ def solve(f, t0, t1, y0,
         raise ValueError("method must be 'RK4' or 'RK45'")
     
     if method == "RK4":
-        solver     = RK4Solver(f, h)
-        traj       = solver.solve(t0, t1, y0)
-        trajectory = traj.to_nested()
+        solver = RK4Solver(f, h)
+        traj   = solver.solve(t0, t1, y0)
+        # Use NumPy buffer protocol — zero copy!
+        y_array = np.array(traj, copy=False)
         n_steps    = traj.n_steps() - 1
         n_rejected = 0
-        times = list(np.arange(t0, t1 + h, h)[:traj.n_steps()])
+        times = list(np.linspace(t0, t1, traj.n_steps()))
 
-    else:
-        solver     = RK45Solver(f, rtol, atol, h_init, h_max, h_min)
-        traj       = solver.solve(t0, t1, y0)
-        trajectory = traj.to_nested()
+    else:  # RK45
+        solver = RK45Solver(f, rtol, atol, h_init, h_max, h_min)
+        traj   = solver.solve(t0, t1, y0)
+        # Use NumPy buffer protocol — zero copy!
+        y_array    = np.array(traj, copy=False)
         n_steps    = solver.get_n_steps()
         n_rejected = solver.get_n_rejected()
         times      = solver.get_times()
 
-    return ODEResult(times, trajectory, n_steps, n_rejected, method)
+    # y_array shape is (n_steps, n_dims)
+    # transpose to (n_dims, n_steps) for consistency with SciPy
+    return ODEResult(times, y_array.T, n_steps, n_rejected, method)
+    
+    # if method == "RK4":
+    #     solver     = RK4Solver(f, h)
+    #     traj       = solver.solve(t0, t1, y0)
+    #     trajectory = traj.to_nested()
+    #     n_steps    = traj.n_steps() - 1
+    #     n_rejected = 0
+    #     times = list(np.arange(t0, t1 + h, h)[:traj.n_steps()])
+
+    # else:
+    #     solver     = RK45Solver(f, rtol, atol, h_init, h_max, h_min)
+    #     traj       = solver.solve(t0, t1, y0)
+    #     trajectory = traj.to_nested()
+    #     n_steps    = solver.get_n_steps()
+    #     n_rejected = solver.get_n_rejected()
+    #     times      = solver.get_times()
+
+    # return ODEResult(times, trajectory, n_steps, n_rejected, method)
 
     # if method == "RK4":
     #     solver     = RK4Solver(f, h)

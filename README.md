@@ -9,11 +9,16 @@ performance than SciPy while producing identical results.
 # What Is An ODE?
 
 An Ordinary Differential Equation describes how a system changes over time:
-    dy/dt = f(t, y),  y(t0) = y0
+
+```
+dy/dt = f(t, y),  y(t0) = y0
+```
+
 Real-world examples:
 - **Predator-prey dynamics** — rabbit and fox populations
 - **Harmonic oscillator** — spring-mass systems, pendulums
 - **Exponential decay** — radioactive decay, drug metabolism
+- **Disease spread** — SIR epidemic models
 - **Electrical circuits** — voltage and current over time
 
 # Performance
@@ -39,9 +44,9 @@ FastODE results validated against SciPy (`scipy.integrate.solve_ivp`):
 
 | Problem | Difference | Status |
 |---------|-----------|--------|
-| Exponential Decay | 5.98e-13 | ✅ PASS |
-| Harmonic Oscillator | 5.20e-10 | ✅ PASS |
-| Lotka-Volterra | 3.86e-06 | ✅ PASS |
+| Exponential Decay | 5.98e-13 | PASS |
+| Harmonic Oscillator | 5.20e-10 | PASS |
+| Lotka-Volterra | 3.86e-06 | PASS |
 
 # Quick Start
 
@@ -67,13 +72,43 @@ plt.legend()
 plt.show()
 ```
 
+# Interactive Interface (Beta)
+
+FastODE ships with an interactive menu that lets you choose from a library
+of real-world systems, set your own parameters, and solve them live:
+
+```bash
+python python/interactive.py
+```
+
+Available systems:
+
+| # | System | Models |
+|---|--------|--------|
+| 1 | Radioactive Decay / Cooling | A quantity decreasing proportional to itself |
+| 2 | Population Growth (Logistic) | Growth that levels off at a carrying capacity |
+| 3 | Harmonic Oscillator | Frictionless spring or pendulum |
+| 4 | Damped Oscillator | Real spring with friction |
+| 5 | Predator-Prey (Lotka-Volterra) | Cycling animal populations |
+| 6 | Disease Spread (SIR Epidemic) | Infection spreading through a population |
+| 7 | RC Circuit | Voltage across a charging capacitor |
+
+Each system accepts custom parameters and produces a time-evolution plot
+(plus a phase portrait for multi-variable systems).
+
+# Demo Script
+
+```bash
+python python/interactive.py   # interactive system picker
+```
+
 # Installation
 
 # Prerequisites
 - CMake 3.18+
 - g++ with C++17 support
 - Python 3.8+
-- pybind11, numpy, scipy
+- pybind11, numpy, scipy, matplotlib
 
 # Build
 
@@ -95,25 +130,35 @@ make benchmark  # Performance benchmark
 
 # Project Structure
 
+```
 FastODE/
-include/
-rk4.hpp          # RK4 + RK45 class declarations
-src/
-rk4.cpp          # RK4 + RK45 implementations
-tests/
-test_rk4.cpp     # Google Test unit tests
-python/
-bindings.cpp     # pybind11 C++ bindings
-fastode_interface.py  # Python API
-validate.py      # Validation vs SciPy
-benchmark.py     # Performance benchmarking
-scripts/
-setup.sh         # Automated build setup
-validate_ci.py   # CI validation script
-.github/
-workflows/
-ci.yml         # GitHub Actions CI
-Makefile           # Build automation
+  include/
+    rk4.hpp               # RK4 + RK45 + Trajectory class declarations
+  src/
+    rk4.cpp               # RK4 + RK45 implementations
+  tests/
+    test_rk4.cpp          # Google Test unit tests
+  python/
+    bindings.cpp          # pybind11 C++ bindings
+    fastode_interface.py  # Python API
+    validate.py           # Validation vs SciPy
+    benchmark.py          # Performance benchmarking
+    interactive.py        # Interactive system picker
+    create_notebooks.py   # Generates demo notebooks
+  notebooks/
+    01_exponential_decay.ipynb
+    02_harmonic_oscillator.ipynb
+    03_lotka_volterra.ipynb
+  scripts/
+    setup.sh              # Automated build setup
+    validate_ci.py        # CI validation script
+  .github/
+    workflows/
+      ci.yml              # GitHub Actions CI
+  CMakeLists.txt
+  Makefile                # Build automation
+  LICENSE                 # MIT
+```
 
 # Algorithms
 
@@ -126,23 +171,6 @@ Embedded 4th/5th order method. Computes two solutions simultaneously
 and uses their difference as an error estimate to automatically adjust
 step size. Achieves same accuracy as RK4 in far fewer steps.
 
-# Engineering Concepts
-
-This project demonstrates concepts from the NSD course:
-
-| Concept | Implementation |
-|---------|---------------|
-| CMake | Cross-platform build system |
-| Google Test | C++ unit testing |
-| pytest | Python validation |
-| pybind11 | C++/Python interoperability |
-| GitHub Actions | Continuous integration |
-| Memory Management | Pre-allocated workspace vectors |
-| Array Code in C++ | Flat contiguous Trajectory class |
-| NumPy Buffer Protocol | Zero-copy C++ to Python data transfer |
-| Cache Optimization | -O3 -march=native compiler flags |
-| Smart Pointers | unique_ptr factory for solvers |
-| Modern C++17 | Structured bindings, lambdas, std::function |
-
 # License
+
 MIT License — see [LICENSE](LICENSE) for details.
